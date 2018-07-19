@@ -114,6 +114,7 @@ robot.run()
 function loadScripts () {
   robot.load(pathResolve('.', 'scripts'))
   robot.load(pathResolve('.', 'src', 'scripts'))
+  robot.load(pathResolve('.', 'workerScripts'))
 
   loadHubotScripts()
   loadExternalScripts()

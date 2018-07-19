@@ -13,6 +13,7 @@ const Response = require('./response')
 const Listener = require('./listener')
 const Message = require('./message')
 const Middleware = require('./middleware')
+const Worker = require('./worker')
 
 const HUBOT_DEFAULT_ADAPTERS = ['campfire', 'shell']
 const HUBOT_DOCUMENTATION_SECTIONS = ['description', 'dependencies', 'configuration', 'commands', 'notes', 'author', 'authors', 'examples', 'tags', 'urls']
@@ -42,6 +43,7 @@ class Robot {
     this.Response = Response
     this.commands = []
     this.listeners = []
+    this.workers = new Map()
     this.middleware = {
       listener: new Middleware(this),
       response: new Middleware(this),
@@ -70,6 +72,8 @@ class Robot {
       return this.emit('error', err)
     }
     process.on('uncaughtException', this.onUncaughtException)
+
+    this.postMessage = this.postMessage.bind(this)
   }
 
   // Public: Adds a custom Listener with the provided matcher, options, and
@@ -291,6 +295,27 @@ class Robot {
     // When everything is finished (down the middleware stack and back up),
     // pass control back to the robot
     this.middleware.receive.execute({ response: new Response(this, message) }, this.processListeners.bind(this), cb)
+  }
+
+  // Public: Registers a worker to do some background work every time interval
+  //
+  // workerName - The name used to reference the worker
+  // work - A function that will be performed every {workInterval} seconds
+  // workInerval - The frequence, in seconds, at which work will be performed
+  // onMessage - (Optional) Callback called after receiving a new message
+  // queueSize - Initial size of the message queue
+  //
+  // Returns nothing
+  startWork(workerName, work, workInterval, onMessage, queueSize) {
+    this.workers.set(workerName, new Worker(this, work, workInterval, onMessage, queueSize))
+  }
+
+  // Public: Publishes a messages to the specified worker
+  //
+  // workerName - Name of the worker that should receive the message
+  // message - Message to be sent. Can be any object
+  postMessage(workerName, message) {
+    this.workers.get(workerName).postMessage(message);
   }
 
   // Private: Passes the given message to any interested Listeners.
