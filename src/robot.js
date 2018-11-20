@@ -301,13 +301,11 @@ class Robot {
   //
   // workerName - The name used to reference the worker
   // work - A function that will be performed every {workInterval} seconds
-  // workInerval - The frequence, in seconds, at which work will be performed
-  // onMessage - (Optional) Callback called after receiving a new message
-  // queueSize - Initial size of the message queue
+  // workInterval - The frequence, in seconds, at which work will be performed
   //
   // Returns nothing
-  startWork(workerName, work, workInterval, onMessage, queueSize) {
-    this.workers.set(workerName, new Worker(this, work, workInterval, onMessage, queueSize))
+  startWorker(workerName, work, workInterval) {
+    this.workers.set(workerName, new Worker(this, workerName, work, workInterval))
   }
 
   // Public: Publishes a messages to the specified worker
